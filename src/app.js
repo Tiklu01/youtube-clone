@@ -1,7 +1,6 @@
 import express from 'express'; // Import the necessary library for creating an Express.js application
-import { DB_NAME } from './constants'; // Import a constant value (likely the database name) from another file
 import cookieParser from 'cookie-parser'; // Import a library for handling cookies
-
+import cors from 'cors'; // Import a library for enabling Cross-Origin Resource Sharing (CORS)
 // Create an instance of the Express.js application
 const app = express();
 
@@ -16,6 +15,17 @@ app.use(express.json({limit: "16kb"})); // Limit the size of incoming JSON data 
 
 // Parse incoming URL-encoded data in the request body 
 app.use(express.urlencoded({extended: true})); 
+
+app.use(express.static('public')); // Serve static files from the "public" directory
+
+app.use(cookieParser()); // Parse cookies in the request headers 
+
+//routes imports
+import userRouter from './routes/user.route.js'; //userRoiter is not explicitly defined in user.route.js but it is exported as default so we can name it anything while importing
+
+
+//routes declarations
+app.use("/api/v1/users",userRouter); // here using use instead of get because we are using router and router is a middleware
 
 // Export the Express.js application instance for use in other parts of the application
 export {app};

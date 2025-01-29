@@ -8,7 +8,7 @@ const asyncHandler = (func) => async (req, res, next) => {
       // Inside the bubble, we try to run the code you gave us ('func').
       // 'await' is like pausing the code until 'func' finishes its work. 
       // (Technically, 'await' is used with asynchronous functions to wait for their resolution.)
-      await func(req, res, next); 
+     return await func(req, res, next); //returning the function is necessary 
     } catch (error) {
       // If something goes wrong inside the bubble (like a boo-boo), we catch it here!
       // We send a message back saying "Oops, something went wrong!" 
@@ -22,3 +22,5 @@ const asyncHandler = (func) => async (req, res, next) => {
         });
     }
   };
+
+export {asyncHandler}; // This is like putting a label on our bubble so we can find it later.
