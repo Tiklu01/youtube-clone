@@ -25,5 +25,5 @@ import fs from 'fs'; // File system module
         }
     }
     
-
+export {uploadOnCloudinary};
 

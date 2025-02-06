@@ -9,7 +9,7 @@ class ApiResponse {
     ) {
       // Assigning the provided values to the corresponding parts of our ApiResponse object.
       this.statusCode = statusCode;
-      this.data = data;
+      this.data = data; //data is the actual data that we want to send back like search results or user information
       this.message = message;
   
       // This line is like checking a condition to see if things went well (success).

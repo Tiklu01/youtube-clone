@@ -1,13 +1,72 @@
-// Importing the asyncHandler utility to handle asynchronous errors in Express routes
-import { asyncHandler } from "../utils/asyncHandler.js";
+// Importing necessary utilities and models
+import { asyncHandler } from "../utils/asyncHandler.js"; // Utility function to handle async errors in Express
+import { ApiError } from "../utils/ApiError.js"; // Custom error handling class
+import { User } from "../models/user.model.js"; // User model for database interaction
+import { uploadOnCloudinary } from "../utils/cloudinary.js"; // Function to upload images to Cloudinary
+import { ApiResponse } from "../utils/ApiResponse.js"; // Standardized API response format
 
 // Defining the registerUser function, which handles user registration
-// Wrapping it inside asyncHandler to catch errors and prevent unhandled promise rejections
+// Wrapping it inside asyncHandler to automatically catch and handle errors
 const registerUser = asyncHandler(async (req, res) => {
-    // Sending a JSON response with a success message
-    res.status(200).json({
-        message: "user registered succesfully", // Response message
-    });
+   // Extract user details from the request body
+   const { username, email, password, fullName } = req.body;
+   console.log("email:", email);
+   
+   // Validation: Ensure none of the required fields are empty
+   if ([username, email, password, fullName].some((field) => field?.trim() === "")) {
+       throw new ApiError(400, "All fields are required");
+   }
+
+   // Check if a user with the same email or username already exists
+   const existedUser = await User.findOne({
+      $or: [{ username }, { email }], // $or operator checks if either username OR email matches an existing record
+   });
+
+   if (existedUser) {
+       throw new ApiError(400, "User with same email or username already exists");
+   }
+
+   // Retrieve file paths of avatar and cover image (if provided) from the request
+   const avatarLocalPath = req.files?.avatar?.[0]?.path; // Avatar is required
+   const coverImageLocalPath = req.files?.coverImage?.[0]?.path; // Cover image is optional
+   
+   if (!avatarLocalPath) {
+       throw new ApiError(400, "Avatar is required");
+   }
+
+   // Upload avatar to Cloudinary
+   const avatar = await uploadOnCloudinary(avatarLocalPath);
+   
+   // Upload cover image if provided, otherwise set it to null
+   const coverImage = coverImageLocalPath ? await uploadOnCloudinary(coverImageLocalPath) : null;
+  
+   if (!avatar) {
+       throw new ApiError(500, "Avatar upload failed");
+   }
+
+   // Create a new user in the database
+   const user = await User.create({
+       username: username.toLowerCase(), // Convert username to lowercase for consistency
+       email,
+       password, // Storing password directly (should ideally be hashed before saving)
+       fullName,
+       avatar: avatar.url, // Store only the URL of the uploaded avatar
+       coverImage: coverImage?.url || "", // If cover image exists, store URL; otherwise, store an empty string
+   });
+
+   // Fetch the newly created user while excluding sensitive fields
+   const createdUser = await User.findById(user._id).select(
+       "-password -refreshToken" // Excluding password and refreshToken from the response using Mongoose select()
+   );
+
+   if (!createdUser) {
+       throw new ApiError(500, "User registration failed");
+   }
+
+   // Return a success response with user data (excluding sensitive fields)
+   return res.status(201).json(
+       new ApiResponse(200, createdUser, "User registered successfully")
+   );
 });
 
 // Exporting the registerUser function so it can be used in route files

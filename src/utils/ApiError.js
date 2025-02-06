@@ -1,7 +1,3 @@
-// This line tells the computer to include code from another file, kind of like borrowing Legos from a friend's set to build something cool.
-// In this case, we're borrowing the code that lets us build error messages.
-import { Error } from "error";  // Import the built-in Error class
-
 // Imagine we're creating a special kind of error message, just for our program, like a special type of Lego block.
 // We're calling this special block "ApiError" (API stands for Application Programming Interface, a fancy way to talk to other programs).
 // This line is like saying, "Let's build a new kind of error block called ApiError."
