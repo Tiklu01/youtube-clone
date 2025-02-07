@@ -17,7 +17,10 @@ import fs from 'fs'; // File system module
          const response =  await cloudinary.uploader.upload(localfFilePath,{ //upload is a method that uploads file to cloudinary
             resource_type: "auto",
            })
-           console.log("File uploaded on cloudinary successfully", response.url); //response.url is the cloudinary url of the uploaded file
+         /*
+         console.log("File uploaded on cloudinary successfully", response.url); //response.url is the cloudinary url of the uploaded file and response is the response object containing the details of the uploaded file console log response to see the properties of the response object 
+         */
+           fs.unlinkSync(localfFilePath); //unlinkSync is a method that deletes the file from the local system (deletes the file from the local system after uploading it to cloudinary)
            return response;
         } catch (error) {
             fs.unlinkSync(localfFilePath); //unlinkSync is a method that deletes the file from the local system

@@ -9,8 +9,8 @@ import { ApiResponse } from "../utils/ApiResponse.js"; // Standardized API respo
 // Wrapping it inside asyncHandler to automatically catch and handle errors
 const registerUser = asyncHandler(async (req, res) => {
    // Extract user details from the request body
-   const { username, email, password, fullName } = req.body;
-   console.log("email:", email);
+   const { username, email, password, fullName } = req.body; //req.body is an object that contains key-value pairs of data submitted in the request body it's raw/text form file upload is not supported in req.body
+   console.log("req.body = ", req.body); // Log the request body to the console for debugging and learning purposes
    
    // Validation: Ensure none of the required fields are empty
    if ([username, email, password, fullName].some((field) => field?.trim() === "")) {
@@ -29,7 +29,7 @@ const registerUser = asyncHandler(async (req, res) => {
    // Retrieve file paths of avatar and cover image (if provided) from the request
    const avatarLocalPath = req.files?.avatar?.[0]?.path; // Avatar is required
    const coverImageLocalPath = req.files?.coverImage?.[0]?.path; // Cover image is optional
-   
+   console.log("req.files = ", req.files); // Log the uploaded files to the console for debugging and learning purposes (req.files is an object that contains key-value pairs of files uploaded in the request )
    if (!avatarLocalPath) {
        throw new ApiError(400, "Avatar is required");
    }
@@ -48,7 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
    const user = await User.create({
        username: username.toLowerCase(), // Convert username to lowercase for consistency
        email,
-       password, // Storing password directly (should ideally be hashed before saving)
+       password, // Storing hashed password directly (should ideally be hashed before saving)
        fullName,
        avatar: avatar.url, // Store only the URL of the uploaded avatar
        coverImage: coverImage?.url || "", // If cover image exists, store URL; otherwise, store an empty string
