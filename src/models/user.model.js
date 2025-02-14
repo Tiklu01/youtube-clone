@@ -77,4 +77,7 @@ UserSchema.methods.generateRefreshToken = function(){ // generateRefreshToken is
         }
     )
 }
+UserSchema.methods.verifyPassword = async function(password){ //verifyPassword is a method that verifies the password
+    return await bcrypt.compare(password, this.password); //bcrypt.compare is a method that compares the password
+}
 export const User =  mongoose.model('User', UserSchema);

@@ -4,7 +4,9 @@ import { Router } from "express";
 // Importing the registerUser function from the user controller
 import { registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
-
+import { loginUser } from "../controllers/user.controller.js";
+import { logoutUser } from "../controllers/user.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 // Creating an instance of an Express router
 const router = Router();
 
@@ -16,6 +18,12 @@ router.route("/register").post(
     ]),
     registerUser // The controller function handling user registration
 );
+
+router.route("/login").post(loginUser);
+
+
+//secured routes
+router.route("/logout").post(verifyJWT,logoutUser);
 
 /*
  * upload.fields() is a Multer middleware function that allows handling multiple file uploads.
