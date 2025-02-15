@@ -7,6 +7,7 @@ import { upload } from "../middlewares/multer.middleware.js";
 import { loginUser } from "../controllers/user.controller.js";
 import { logoutUser } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { refreshAcessToken } from "../controllers/user.controller.js";
 // Creating an instance of an Express router
 const router = Router();
 
@@ -19,11 +20,21 @@ router.route("/register").post(
     registerUser // The controller function handling user registration
 );
 
-router.route("/login").post(loginUser);
+
+router.route("/login").post(loginUser); // Route for user login
+// 🟢 When a POST request is sent to "/login", the `loginUser` function is executed.
+// 🟢 This function verifies the user's credentials and returns access & refresh tokens.
+
+// 🔒 Secured routes (require authentication)
+router.route("/logout").post(verifyJWT, logoutUser); // Route for user logout
+// 🟢 The `verifyJWT` middleware ensures the request has a valid JWT token.
+// 🟢 If authenticated, `logoutUser` clears the user's refresh token from the database and removes cookies.
 
 
-//secured routes
-router.route("/logout").post(verifyJWT,logoutUser);
+router.route("/refresh-token").post(refreshAcessToken); // Route for refreshing access tokens
+// 🟢 When a POST request is sent to "/refresh-token", the `refreshAcessToken` function is executed.
+// 🟢 This function verifies the refresh token and generates a new access token.
+
 
 /*
  * upload.fields() is a Multer middleware function that allows handling multiple file uploads.
