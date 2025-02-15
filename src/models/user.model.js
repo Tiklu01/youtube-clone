@@ -61,7 +61,7 @@ UserSchema.methods.generateAccessToken = function(){  // generateAccessToken is 
         },
         process.env.ACCESS_TOKEN_SECRET, //secret key
         {
-            expiresIn: ACCESS_TOKEN_EXPIRY, //expiry time
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRY, //expiry time
         }
     )
 }
@@ -73,7 +73,7 @@ UserSchema.methods.generateRefreshToken = function(){ // generateRefreshToken is
         },
         process.env.REFRESH_TOKEN_SECRET, //secret key
         {
-            expiresIn: REFRESH_TOKEN_EXPIRY, //expiry time
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRY, //expiry time
         }
     )
 }

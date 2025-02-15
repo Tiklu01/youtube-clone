@@ -14,7 +14,7 @@ const generateAccessAndRefreshTokens = async(userId) => { // Function to generat
         await user.save({validateBeforeSave: false}); // Save the updated user object to the database (validateBeforeSave: false skips validation)
         return {accessToken, refreshToken}; // Return the generated tokens   
     } catch (error) {
-        throw new ApiError(500, "Token generation failed");
+        throw new ApiError(500, error?.message || "Token generation failed"); // Throw an error if token generation fails
     }
 } 
 
@@ -84,7 +84,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) =>{
     const {email,username,password} = req.body; // fetch data from req body
-    if(!email || !username){ // check if email or username is not provided
+    console.log(email,username,password);
+    if(!email && !username){ // check if email and username is not provided
+        throw new ApiError(400,"Email or username is required");
+    }
+    //alternative way to check if email or username is not provided
+    if(!(email || username)){ // check if email or username is not provided
         throw new ApiError(400,"Email or username is required");
     }
     const user = await User.findOne( // find user by email or username
