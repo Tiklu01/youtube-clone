@@ -294,6 +294,76 @@ const changePassword = asyncHandler(async (req, res) => {
     // Respond with updated user details
     return res.status(200).json(new ApiResponse(200, user, "Cover Image updated successfully"));
  });
+
+ const getUserChannelProfile = asyncHandler(async (req, res) => {
+    const {username} = req.params; // Extract username from request parameters, when we go to a channel profile website, the URL usually contains the username of the channel, like /channel/username we take that info from params
+    if(!username?.trim()) {
+        throw new ApiError(400, "Username is missing"); // Ensure username is provided
+    }
+    // Find user by username
+    const channel = await User.aggregate([
+        {
+            $match:{
+                username: username?.toLowerCase() // Match the username in lowercase
+            }
+        },
+        {  //This lookup is for finding subscriber count of the channel
+            $lookup:{
+                from: "subscriptions", // Join with subscriptions collection
+                localField: "_id", // Match user ID
+                foreignField: "channel", // Match channel field in subscriptions
+                as: "subscribers" // Output field for subscribers
+            }
+        },
+        {  // This lookup is for finding the channels the user is subscribed to
+            $lookup:{
+                from: "subscriptions", // Join with subscriptions collection again
+                localField: "_id", // Match user ID
+                foreignField: "subscriber", // Match subscriber field in subscriptions
+                as: "subscribedTo" // Output field for subscribed channels
+            }
+        },
+        { // addFields stage to calculate subscriber and subscription counts and include them in the output
+            // This stage adds fields to the output document
+            // It calculates the number of subscribers and the number of channels the user is subscribed to
+            // using the $size operator
+            $addFields: {
+                subscriberCount: {
+                    $size: "$subscribers" // Count the number of subscribers
+                 },
+                 channelsSubscribedToCount: {
+                    $size: "$subscribedTo" // Count the number of channels subscribed to
+                 },
+                 isSubscribed: {
+                    $cond: { //conditional operator to check if the user is subscribed to the channel
+                        if: { //if condition
+                            $in: [req.user?._id, "$subscribers.subscriber"] // Check if the user ID is in the subscribers list
+                        },
+                        then: true, // If true, user is subscribed
+                        else: false // If false, user is not subscribed
+                    }
+                 }
+            }
+        },
+        { // Project stage to include only necessary fields in the output you can also exclude fields you don't want using 0 and 1 includes the fields you want in the output
+            // This stage specifies which fields to include in the final output document
+            $project: {
+                username: 1, // Include username
+                fullName: 1, // Include full name
+                avatar: 1, // Include avatar URL    
+                coverImage: 1, // Include cover image URL
+                subscriberCount: 1, // Include subscriber count
+                channelsSubscribedToCount: 1, // Include channels subscribed to count
+                isSubscribed: 1, // Include subscription status
+                email: 1 // Include email
+            }
+        }
+    ])
+    if(!channel?.length) {
+        throw new ApiError(404, "Channel not found"); // If no channel is found, throw an error
+    }
+    return res.status(200).json(new ApiResponse(200, channel[0], "Channel profile fetched successfully")); // Return the channel profile
+ })
  
 // Exporting all functions for use in routes
 export {
@@ -305,5 +375,6 @@ export {
     getCurrentUser,
     UpdateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
     };
