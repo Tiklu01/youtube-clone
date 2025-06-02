@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js"; // User model for database inter
 import { uploadOnCloudinary } from "../utils/cloudinary.js"; // Function to upload images to Cloudinary
 import { ApiResponse } from "../utils/ApiResponse.js"; // Standardized API response format
 import jwt from 'jsonwebtoken'; // Importing JWT for token generation
+import mongoose from "mongoose";
 
 // 🟢 Function to generate access and refresh tokens for a user
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -364,7 +365,53 @@ const changePassword = asyncHandler(async (req, res) => {
     }
     return res.status(200).json(new ApiResponse(200, channel[0], "Channel profile fetched successfully")); // Return the channel profile
  })
- 
+ const getWatchHistory = asyncHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: await new mongoose.Types.ObjectId(req.user._id) // mongoDB ID's are of type ObjectId, so we need to convert the string ID to ObjectId mongoose does that for us
+            }
+        },
+        {
+            $lookup:{
+                from: "videos", // Join with watch history collection
+                localField: "watchHistory", // Match user watch history field
+                foreignField: "_id", // Match video ID field in watch history
+                as: "watchHistory", // Output field for watch history
+                // writing pipeline here will work on the watchHistory array
+                pipeline: [ // Pipeline to include owner details in the watch history
+                    {
+                        $lookup:{
+                            from: "users", // Join with users collection to get video uploader details
+                            localField: "owner", // Match video owner field
+                            foreignField: "_id", // Match user ID field in users
+                            as: "owner", // Output field for video 
+                            // writing pipeline here will work on the owner array
+                            pipeline: [ // Pipeline to project only necessary fields from the owner
+                                {
+                                    $project: { // Project stage to include only necessary fields in the output
+                                        username: 1, // Include username
+                                        fullName: 1, // Include full name
+                                        avatar: 1, // Include avatar URL
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: { // Add fields to the output document
+                            owner: {
+                                $first: "$owner" // Get the first owner from the array as there should be only one owner per video
+                            }
+                        }
+                    }
+                   
+                ]
+            }
+        }
+    ])
+    return res.status(200).json( new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully"));
+ });
 // Exporting all functions for use in routes
 export {
     registerUser,
@@ -376,5 +423,6 @@ export {
     UpdateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
     };
