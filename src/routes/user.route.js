@@ -2,12 +2,14 @@
 import { Router } from "express";
 
 // Importing the registerUser function from the user controller
-import { registerUser } from "../controllers/user.controller.js";
+import { getCurrentUser, getUserChannelProfile, getWatchHistory, registerUser, UpdateAccountDetails } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { loginUser } from "../controllers/user.controller.js";
 import { logoutUser } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { refreshAcessToken } from "../controllers/user.controller.js";
+import { changePassword } from "../controllers/user.controller.js";
+import { updateUserAvatar, updateUserCoverImage } from "../controllers/user.controller.js";
 // Creating an instance of an Express router
 const router = Router();
 
@@ -35,7 +37,19 @@ router.route("/refresh-token").post(refreshAcessToken); // Route for refreshing 
 // 🟢 When a POST request is sent to "/refresh-token", the `refreshAcessToken` function is executed.
 // 🟢 This function verifies the refresh token and generates a new access token.
 
+router.route("/change-password").post(verifyJWT, changePassword); // Route for changing user password
 
+router.route('/current-user').get(verifyJWT, getCurrentUser) // Route to get the current authenticated user
+
+router.route("/update-account").patch(verifyJWT, UpdateAccountDetails) // Route to update account details
+
+router.route("/avatar").patch(verifyJWT, upload.single("avatar"), updateUserAvatar) // Route to update user avatar
+
+router.route("/cover-image").patch(verifyJWT, upload.single("coverImage"), updateUserCoverImage) // Route to update user cover image)
+
+router.route("/c/:username").get(verifyJWT, getUserChannelProfile) // Route to get user channel profile by username
+
+route.route("/hostory").get(verifyJWT, getWatchHistory) // Route to get user's watch history
 /*
  * upload.fields() is a Multer middleware function that allows handling multiple file uploads.
  * It takes an array of objects where each object specifies a field name and the maximum number of files allowed for that field.
